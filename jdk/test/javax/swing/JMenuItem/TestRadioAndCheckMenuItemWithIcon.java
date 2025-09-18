@@ -43,8 +43,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
@@ -85,14 +83,26 @@ public class TestRadioAndCheckMenuItemWithIcon {
             + "\n"
             + "If bullet and checkmark is shown, test passes else fails.";
 
+    private static final LinkedBlockingQueue<Boolean> resultQueue = new LinkedBlockingQueue<Boolean>(1);
+
+    private static void endTest(boolean result) {
+        SwingUtilities.invokeLater(
+                new Runnable() {
+                    public void run() {
+                        try {
+                            resultQueue.put(result);
+                        } catch (Exception ignored) {
+                        }
+                    }
+                });
+    }
+
     public static void main(String[] args) throws Exception {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-        LinkedBlockingQueue<Boolean> resultQueue = new LinkedBlockingQueue<Boolean>(1);
-
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                TestRadioAndCheckMenuItemWithIcon.doTest(resultQueue);
+                TestRadioAndCheckMenuItemWithIcon.doTest();
             }
         });
 
@@ -103,7 +113,7 @@ public class TestRadioAndCheckMenuItemWithIcon {
         }
     }
 
-    public static void doTest(LinkedBlockingQueue<Boolean> resultQueue) {
+    public static void doTest() {
         BufferedImage img = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
         Graphics g = img.getGraphics();
         g.setColor(Color.red);
@@ -186,24 +196,16 @@ public class TestRadioAndCheckMenuItemWithIcon {
         yes.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    frame.dispose();
-                    resultQueue.put(Boolean.TRUE);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(TestRadioAndCheckMenuItemWithIcon.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                frame.dispose();
+                endTest(true);
             }
         });
 
         no.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    frame.dispose();
-                    resultQueue.put(Boolean.FALSE);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(TestRadioAndCheckMenuItemWithIcon.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                frame.dispose();
+                endTest(false);
             }
         });
 
@@ -211,13 +213,9 @@ public class TestRadioAndCheckMenuItemWithIcon {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                try {
-                    frame.dispose();
-                    resultQueue.put(Boolean.FALSE);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(TestRadioAndCheckMenuItemWithIcon.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+                frame.dispose();
+                endTest(false);
+}
         });
 
         frame.getContentPane().add(yesno, BorderLayout.SOUTH);
