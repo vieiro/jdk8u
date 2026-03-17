@@ -22,6 +22,7 @@
    *
    */
 
+#include <freetype/freetype.h>
 #include <freetype/ftadvanc.h>
 #include <freetype/internal/ftdebug.h>
 
