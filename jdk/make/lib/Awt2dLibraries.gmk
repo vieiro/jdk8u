@@ -868,11 +868,16 @@ else
 # BUILD_LIBFREETYPE_HEADERS := $(addprefix -I, $(BUILD_LIBFREETYPE_HEADER_DIRS))
 
   # For use by libfontmanager:
-  LIBFREETYPE_CFLAGS := -I$(LIBFREETYPE_SRC)/include
+  LIBFREETYPE_CFLAGS := -I$(LIBFREETYPE_SRC)/include -DFT_DISABLE_HARFBUZZ=true
   ifeq ($(OPENJDK_TARGET_OS), windows)
     LIBFREETYPE_LIBS := $(JDK_OUTPUTDIR)/objs/libfreetype/freetype.lib
     # freetype now requires you to manually define this (see ftconfig.h)
     BUILD_LIBFREETYPE_CFLAGS += -DDLL_EXPORT
+    ifeq ($(OPENJDK_TARGET_CPU_BITS), 32)
+      # on 32b windows, the old  msvsc do not understand inline, unluckily
+      # there is wrong detection in freetype 2.14 to use only __inline in such case
+      BUILD_LIBFREETYPE_CFLAGS += -Dinline=__inline
+    endif
   else
     LIBFREETYPE_LIBS := -lfreetype
   endif
